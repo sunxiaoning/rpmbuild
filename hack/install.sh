@@ -12,22 +12,74 @@ APP_NAME=nginx
 APP_VERSION=${APP_VERSION:-"1.26.1"}
 RELEASE=${RELEASE-"2"}
 DIST=${DIST:-"el8"}
-TOPDIR=${BUILD_USER_HOME}/rpmbuild/${APP_NAME}/${APP_VERSION}
-RPM_NAME=${APP_NAME}-${APP_VERSION}-${RELEASE}.${DIST}.${ARCH}.rpm 
-
-
-LOCAL_REPO_PATH=/opt/repo/${APP_NAME}/${APP_VERSION}
 
 install-repo() {
   echo "Install RPM to repo..."
+  TOPDIR=${BUILD_USER_HOME}/rpmbuild/${APP_NAME}/${APP_VERSION}
+  RPM_NAME=${APP_NAME}-${APP_VERSION}-${RELEASE}.${DIST}.${ARCH}.rpm
+  LOCAL_REPO_PATH=/opt/rpmrepo/${APP_NAME}/${APP_VERSION}
+
 	mkdir -p ${LOCAL_REPO_PATH}
-	cp ${TOPDIR}/RPMS/${ARCH}/${RPM_NAME} ${LOCAL_REPO_PATH}
+	install -D -m 644 ${TOPDIR}/RPMS/${ARCH}/${RPM_NAME} ${LOCAL_REPO_PATH}/${RPM_NAME}
 	createrepo ${LOCAL_REPO_PATH}
 }
 
-install() {
+install-reponginx() {
+  echo "Install nginx RPM to repo..."
+
+  echo "Install nginx 1.26.1 rpm ..."
+  APP_NAME=nginx
+  APP_VERSION=1.26.1
+  RELEASE=2
+  DIST=el8
+
+  # install-repo
+  sleep 1
+
+  echo "Install nginx 1.24.0 rpm ..."
+  APP_VERSION=1.24.0
+  RELEASE=1
+  DIST=el8
+
+  # install-repo
+  sleep 1
+
+  echo "Install nginx 1.22.1 rpm ..."
+  APP_VERSION=1.22.1
+  RELEASE=1
+  DIST=el8
+
+  install-repo
+}
+
+install-repoall() {
+  echo "Install all RPM to repo..."
+  install-reponginx
+}
+
+install-rpm() {
   echo "Install RPM from repo..."
+  LOCAL_REPO_PATH=/opt/rpmrepo/${APP_NAME}/${APP_VERSION}
+  RPM_NAME=${APP_NAME}-${APP_VERSION}-${RELEASE}.${DIST}.${ARCH}.rpm
+
 	rpm -ivh ${LOCAL_REPO_PATH}/${RPM_NAME}
+}
+
+install-rpmnginx() {
+  echo "Install nginx RPM from repo..."
+
+  APP_NAME=nginx
+  APP_VERSION=1.26.1
+  RELEASE=2
+  DIST=el8
+
+  install-rpm
+}
+
+install-rpmall() {
+  echo "Install all RPM from repo..."
+
+  install-rpmnginx
 }
 
 uninstall() {
@@ -42,14 +94,23 @@ main() {
     repo)
       install-repo-docker
       ;;
-    install)
-      install-docker
+    reponginx)
+      install-reponginx-docker
       ;;
-    uninstall)
-      uninstall-docker
+    repoall)
+      install-repoall-docker
+      ;;
+    rpm)
+      install-rpm-docker
+      ;;
+    rpmnginx)
+      install-rpmnginx-docker
+      ;;
+    rpmall)
+      install-rpmall-docker
       ;;
     *)
-      install-docker
+      install-rpmall-docker
       ;;
     esac
   else
@@ -58,14 +119,23 @@ main() {
     repo)
       install-repo
       ;;
-    install)
-      install
+    reponginx)
+      install-reponginx
       ;;
-    uninstall)
-      uninstall
+    repoall)
+      install-repoall
+      ;;
+    rpm)
+      install-rpm
+      ;;
+    rpmnginx)
+      install-rpmnginx
+      ;;
+    rpmall)
+      install-rpmall
       ;;
     *)
-      install
+      install-rpmall
       ;;
     esac
   fi
