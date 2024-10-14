@@ -3,7 +3,7 @@ init:
 
 default: build-rpm
 
-prepare:
+prepare: init
 	./hack/build.sh prep
 
 # build the project
